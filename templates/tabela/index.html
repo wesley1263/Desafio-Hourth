@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Desafio HOURTH</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Desafio HOURTH</h1>
+        </div>
+    </div>
+    <div class="row">
+        <table class="table">
+            <thead>
+            <tr class="colunas">
+                <th scope="col">Produto</th>
+                <th scope="col">Data inserção na loja</th>
+                <th scope="col">Total de vendas</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <div class="row center-block">
+        <nav aria-label="...">
+            <ul class="pagination pagination-sm"></ul>
+        </nav>
+    </div>
+</div>
+</div>
+</body>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    jQuery(this).ready(function ($) {
+        var param = getUrlParameter('page');
+        $.ajax({
+            url: 'http://127.0.0.1:8000/tabela-ajax/?page=' + param,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                console.log(data);
+                createPagination(data);
+                var totalRow = createThDynamic(data.data_table);
+                $.each(data.data_table, function (key, value) {
+                    $('tbody').append('<tr>');
+                    $('tbody').append('<td>' + value.url + '</td><td>' + value.details.product_url__created_at + '</td><td>' + sumSales(value.sales) + '</td>');
+                    for (let i = 0; i <totalRow.length; i++) {
+                        var dateSale = totalRow[i]
+                        $.each(value.sales, function (key, val) {
+                            if (val.consult_date == dateSale) {
+                                $('tbody').append('<td>' + val.total_sales + '</td>');
+                            }
+                        })
+                    }
+                    $('tbody').append('</tr>');
+
+                });
+            }
+        });
+    });
+
+    function createThDynamic(data) {
+        var months = [];
+        data.map(function (item) {
+            var sales = item.sales
+            sales.map(function (item) {
+                months.push(item.consult_date);
+            });
+        });
+        var uniqueMonths = months.filter(function (item, pos) {
+            return months.indexOf(item) == pos;
+        });
+
+        uniqueMonths.sort().map(function (item) {
+            $(".colunas").append('<th scope="col">' + item + '</th>');
+        });
+
+        return uniqueMonths;
+    }
+
+
+    function sumSales(sales) {
+        let sum = 0;
+        sales.forEach(function (sale) {
+            sum += sale.total_sales;
+        });
+        return sum;
+    }
+
+    function createPagination(data) {
+        let pagination = '';
+        for (let i = 1; i <= data.total_pages; i++) {
+            var href = "?page=" + i;
+            pagination += '<li class="page-item"><a class="page-link" href=' + href + '>' + i + '</a></li>';
+        }
+        jQuery('.pagination').html(pagination);
+    }
+
+    // https://stackoverflow.com/questions/19491336/how-to-get-url-parameter-using-jquery-or-plain-javascript
+    function getUrlParameter(sParam) {
+        var sPageURL = window.location.search.substring(1),
+            sURLVariables = sPageURL.split('&'),
+            sParameterName,
+            i;
+
+        for (i = 0; i < sURLVariables.length; i++) {
+            sParameterName = sURLVariables[i].split('=');
+
+            if (sParameterName[0] === sParam) {
+                return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+            }
+        }
+        return 1;
+    };
+
+
+</script>
+</html>
